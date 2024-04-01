@@ -2,12 +2,13 @@ import numpy as np
 from pylamp.loss.losses import Loss
 from pylamp.neural.module import Module
 from pylamp.utils.data import DataGenerator as dg
+from IPython.display import clear_output
 
 class SGD():
     @staticmethod
     def step_multiple(fc1 : Module,fc2 : Module,activation1 : Module,activation2 : Module,loss : Loss, X_train : np.ndarray, y_train : np.ndarray, 
         epochs : int = 1000, lr : float = 1e-3, batch_size : int = 32,
-        verbose : bool = True):
+        verbose : bool = True, plot_boundary=False, model_to_plot=None):
         train_loss_tracker = []
         nb_time_updated = 0
 
@@ -39,6 +40,11 @@ class SGD():
             train_loss_tracker.append(loss_item)
            
             if (epochs < 10 or i%(epochs//10) == 0) and verbose:
+                if(plot_boundary):
+                    dg.plot_decision_boundary(X_train,y_train,model_to_plot,title="Boundary evolution")
+                    if i < epochs-1:
+                        clear_output(wait=True)
+
                 print(f"Epoch {i} : Train loss : {loss_item}")
 
         print(f"Model updated {nb_time_updated} times.")
