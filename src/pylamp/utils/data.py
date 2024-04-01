@@ -68,7 +68,7 @@ class DataGenerator():
                             np.arange(y_min, y_max, 0.01))
 
         Z = model.forward(np.array(np.c_[xx.ravel(), yy.ravel()], dtype=np.float32))
-        Z = np.sign(Z)
+        Z = np.where(Z >= 0.5, 1, 0)
         Z = Z.reshape(xx.shape)
         plt.figure(figsize=(12, 7))
         plt.contourf(xx, yy, Z, alpha=0.8)

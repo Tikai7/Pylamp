@@ -9,9 +9,6 @@ class TanH(Module):
     def forward(self,X):
         return np.tanh(X)
     
-    def backward(self):
-        pass
-
     def zero_grad(self):
         pass
 
@@ -22,7 +19,7 @@ class TanH(Module):
         pass
 
     def backward_delta(self, input, delta):
-        pass
+        return delta * (1 - self.forward(input) ** 2)
 
 
 class Sigmoid(Module):
@@ -33,9 +30,6 @@ class Sigmoid(Module):
     def forward(self,X):
         return 1/(1+np.exp(-X))
     
-    def backward(self):
-        pass
-
     def zero_grad(self):
         pass
 
@@ -46,7 +40,8 @@ class Sigmoid(Module):
         pass
 
     def backward_delta(self, input, delta):
-        pass
+        sigmoid_x = self.forward(input)
+        return delta*sigmoid_x*(1-sigmoid_x)
 
 class ReLU(Module):
     """Class representing a ReLU activation function."""
@@ -56,9 +51,6 @@ class ReLU(Module):
     def forward(self,X):
         return np.where(X>0, X, 0)
     
-    def backward(self):
-        pass
-    
     def zero_grad(self):
         pass
 
@@ -69,5 +61,5 @@ class ReLU(Module):
         pass
 
     def backward_delta(self, input, delta):
-        pass
+        return np.where(input>0, 1, 0)*delta
 
