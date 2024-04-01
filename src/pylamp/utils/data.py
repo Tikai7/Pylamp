@@ -6,9 +6,9 @@ from data.MlTools.mltools import *
 class DataGenerator():
 
     @staticmethod
-    def generate_2D_data(centerx=1,centery=1,sigma=0.1,nbex=1000,data_type=0,epsilon=0.02):
+    def generate_2D_data(centerx=1,centery=1,sigma=0.1,nbex=1000,data_type=0,epsilon=0.02,train_size=0.8):
         X, y = gen_arti(centerx,centery,sigma,nbex,data_type,epsilon)
-        X_train,X_test,y_train,y_test  = train_test_split(X,y,train_size=0.8)
+        X_train,X_test,y_train,y_test  = train_test_split(X,y,train_size=train_size)
         y_train = np.where(y_train == -1, 0, 1).reshape((-1, 1))
         y_test = np.where(y_test == -1, 0, 1).reshape((-1, 1))
         return X_train,X_test,y_train,y_test 
