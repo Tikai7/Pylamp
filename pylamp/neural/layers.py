@@ -1,5 +1,5 @@
 import numpy as np 
-from pylamp.layers.Module import Module
+from pylamp.neural.module import Module
 
 class Linear(Module):
     """Class representing a linear layer in a neural network."""
@@ -11,16 +11,16 @@ class Linear(Module):
         self.output_size = output_size
         self._parameters = {
             "weights" : np.random.randn(input_size, output_size),
-            "bias" : np.random.randn(output_size, 1) if use_bias else np.zeros((output_size, 1))
+            "bias" : np.random.randn(output_size) if use_bias else np.zeros(output_size)
         }
         self._gradient = {
-            "weights" : None,
-            "bias" : None
+            "weights" : np.zeros((self.input_size, self.output_size)),
+            "bias" : np.zeros(output_size)
         }
         
     def zero_grad(self):
         self._gradient["weights"] = np.zeros((self.input_size, self.output_size))
-        self._gradient["bias"] = np.zeros((1, self.output_size))
+        self._gradient["bias"] = np.zeros(self.output_size)
 
     def forward(self, X):
         output = X @ self._parameters["weights"] + self._parameters["bias"]
@@ -37,5 +37,5 @@ class Linear(Module):
             self._gradient["bias"] += delta.sum(axis=0)
 
     def backward_delta(self, input, delta):
-        self.delta_grad = delta @ self._parameters["weights"].T
-        return self.delta_grad
+        delta_grad = delta @ self._parameters["weights"].T
+        return delta_grad

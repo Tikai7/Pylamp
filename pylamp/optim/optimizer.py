@@ -1,9 +1,9 @@
 import numpy as np
 from pylamp.loss.losses import Loss
-from pylamp.layers.Module import Module
+from pylamp.neural.module import Module
 from pylamp.utils.data import DataGenerator as dg
 
-class GradientDescent():
+class SGD():
 
     @staticmethod
     def step(
@@ -25,10 +25,12 @@ class GradientDescent():
                 output = model.forward(batch_x)
                 train_loss += loss.forward(batch_y, output)
                 loss_grad = loss.backward(batch_y, output)
-                delta_grad = model.backward_delta(batch_x, loss_grad)
-                model.backward_update_gradient(batch_x, delta_grad)
-                nb_time_updated += 1
+                # on s'en fou de la delta_grad, car pour l'instant on a un seul module
+                model.backward_delta(batch_x, loss_grad)
+                model.backward_update_gradient(batch_x, loss_grad)
                 model.update_parameters(lr)
+                nb_time_updated += 1
+
             loss_item = train_loss/batch_size
             train_loss_tracker.append(loss_item)
             # Validation
