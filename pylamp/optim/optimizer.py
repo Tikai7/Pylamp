@@ -4,7 +4,6 @@ from pylamp.neural.module import Module
 from pylamp.utils.data import DataGenerator as dg
 
 class SGD():
-
     @staticmethod
     def step(
         model : Module, loss : Loss, X_train : np.ndarray, y_train : np.ndarray, 
@@ -42,8 +41,9 @@ class SGD():
                 val_loss_item = val_loss/batch_size
                 val_loss_tracker.append(val_loss_item)
             
-            if i%(epochs//10) == 0 and verbose:
+            if (epochs < 10 or i%(epochs//10) == 0) and verbose:
                 print(f"Epoch {i} : Train loss : {loss_item} - Val loss : {val_loss_item}")
+
         print(f"Model updated {nb_time_updated} times.")
         return train_loss_tracker, val_loss_tracker
 
