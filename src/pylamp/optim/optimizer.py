@@ -55,14 +55,15 @@ def SGD(network, X_train, y_train, batch_size, epochs, verbose=False):
     for epoch in range(epochs):
         total_loss = 0.0
 
-        # Shuffle the dataset
-        # Concatenate X_train and y_train
-        dataset = np.hstack((X_train, y_train.reshape(-1, 1)))
-        np.random.shuffle(dataset)  # Shuffle the dataset along the first axis
-
-        # Split the shuffled dataset back into X_train and y_train
-        X_train_shuffled = dataset[:, :-1]
-        y_train_shuffled = dataset[:, -1]
+        # Generate a list of indices
+        indices = list(range(len(X_train)))
+        
+        # Shuffle the indices list
+        np.random.shuffle(indices)
+        
+        # Sort X_train and y_train according to the shuffled indices
+        X_train_shuffled = X_train[indices]
+        y_train_shuffled = y_train[indices]
 
         train_data = dg.batch_generator(
             X_train_shuffled, y_train_shuffled, batch_size)
