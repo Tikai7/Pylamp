@@ -54,4 +54,15 @@ class Sequentiel(Module):
             delta_grad = module.backward_delta(input_data, delta_grad)
 
     def backward_delta(self, input, delta):
-        pass
+        """Compute the gradient of the loss function with respect to the input of the Sequential model.
+        @param input: The input data to the module.
+        @param delta: The gradient of the loss function with respect to the output of the module.
+        @return: The gradient of the loss function with respect to the input of the module.
+        """
+        delta_grad = delta
+
+        for i, module in reversed(list(enumerate(self.modules))):
+            input_data = self.layer_inputs[i]
+            delta_grad = module.backward_delta(input_data, delta_grad)
+
+        return delta_grad
