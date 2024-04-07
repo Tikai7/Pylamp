@@ -33,7 +33,10 @@ class Optim:
 
         # Backward pass
         loss_grad = self.loss.backward(batch_y, output)
-        self.net.backward(loss_grad, self.eps)
+
+        self.net.backward_delta(batch_x, loss_grad)
+        self.net.backward_update_gradient(batch_x, loss_grad)
+        self.net.update_parameters(self.eps)
 
         return loss_value
 
@@ -57,10 +60,10 @@ def SGD(network, X_train, y_train, batch_size, epochs, verbose=False):
 
         # Generate a list of indices
         indices = list(range(len(X_train)))
-        
+
         # Shuffle the indices list
         np.random.shuffle(indices)
-        
+
         # Sort X_train and y_train according to the shuffled indices
         X_train_shuffled = X_train[indices]
         y_train_shuffled = y_train[indices]

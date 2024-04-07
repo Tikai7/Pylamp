@@ -1,4 +1,7 @@
-class Sequentiel():
+from pylamp.neural.module import Module
+
+
+class Sequentiel(Module):
     def __init__(self):
         """
         The Sequential model represents a linear stack of layers/modules.
@@ -12,6 +15,12 @@ class Sequentiel():
         @param module: The module (layer) to add.
         """
         self.modules.append(module)
+
+    def zero_grad(self):
+        """Reset gradients of all parameters in the model to zero.
+        """
+        for module in self.modules:
+            module.zero_grad()
 
     def forward(self, X):
         """Perform a forward pass through the Sequential model.
@@ -28,7 +37,11 @@ class Sequentiel():
 
         return inputs[-1]
 
-    def backward(self, loss_grad, lr):
+    def update_parameters(self, gradient_step=1e-3):
+        for module in self.modules:
+            module.update_parameters(gradient_step)
+
+    def backward_update_gradient(self, input, loss_grad):
         """Update gradients and parameters through a backward pass (backpropagation) in the Sequential model.
         @param loss_grad: The gradient of the loss function with respect to the output of the model.
         @param lr: Learning rate for updating parameters.
@@ -39,10 +52,6 @@ class Sequentiel():
             input_data = self.layer_inputs[i]
             module.backward_update_gradient(input_data, delta_grad)
             delta_grad = module.backward_delta(input_data, delta_grad)
-            module.update_parameters(lr)
 
-    def zero_grad(self):
-        """Reset gradients of all parameters in the model to zero.
-        """
-        for module in self.modules:
-            module.zero_grad()
+    def backward_delta(self, input, delta):
+        pass
