@@ -4,6 +4,7 @@ from pylamp.neural.module import Module
 from pylamp.utils.data import DataGenerator as dg
 from IPython.display import clear_output
 
+
 class Optim:
     def __init__(self, net, loss, eps):
         """Initialize the Optimizer.
@@ -19,9 +20,10 @@ class Optim:
         """Perform one step of gradient descent.
         @param batch_x: Input data (batch) for training.
         @param batch_y: Target labels (batch) for training.
+        @return loss_value: The loss value for the current batch.
         """
         # Reset gradients to zero
-        self.net.zero_grad()  
+        self.net.zero_grad()
 
         # Forward pass
         output = self.net.forward(batch_x)
@@ -36,92 +38,44 @@ class Optim:
         return loss_value
 
 
-class SGD():
-    @staticmethod
-    def step_multiple(fc1 : Module,fc2 : Module,activation1 : Module,activation2 : Module,loss : Loss, X_train : np.ndarray, y_train : np.ndarray, 
-        epochs : int = 1000, lr : float = 1e-3, batch_size : int = 32,
-        verbose : bool = True, plot_boundary=False, model_to_plot=None):
-        train_loss_tracker = []
-        nb_time_updated = 0
+def SGD(network, X_train, y_train, batch_size, epochs, verbose=False):
+    """Perform Stochastic Gradient Descent (SGD) on the given network using the provided dataset.
+    @param network: The neural network model to train.
+    @param X_train (numpy array): The input features of the training dataset.
+    @param y_train (numpy array): The target labels of the training dataset.
+    @param batch_size (int): The size of each mini-batch used for training.
+    @param epochs (int): The number of complete passes through the training dataset.
+    @param verbose (bool, optional): If True, prints the average loss for each epoch during training. Default is False.
+    @return train_loss_tracker: A list containing the average loss for each epoch.
+    """
 
-        for i in range(epochs):
-            train_data = dg.batch_generator(X_train, y_train, batch_size)
-            train_loss = 0
-            for batch_x, batch_y in train_data:
-                fc1.zero_grad()
-                fc2.zero_grad()
+    num_batches = len(X_train) // batch_size
+    train_loss_tracker = []
 
-                output_fc1 = fc1.forward(batch_x)
-                output_ac1 = activation1.forward(output_fc1)
-                output_fc2 = fc2.forward(output_ac1)
-                output_ac2 = activation2.forward(output_fc2)
-                train_loss += loss.forward(batch_y, output_ac2)
+    for epoch in range(epochs):
+        total_loss = 0.0
 
-                loss_grad = loss.backward(batch_y, output_ac2)
-                delta_grad = activation2.backward_delta(output_fc2, loss_grad)
-                fc2.backward_update_gradient(output_ac1, delta_grad)
-                delta_grad_fc2 = fc2.backward_delta(output_ac1, delta_grad)
-                fc2.update_parameters(lr)
-                delta_grad_ac1 = activation1.backward_delta(output_fc1, delta_grad_fc2)
-                fc1.backward_update_gradient(batch_x, delta_grad_ac1)
-                fc1.backward_delta(batch_x, delta_grad_ac1)
-                fc1.update_parameters(lr)
-                nb_time_updated += 1
+        # Shuffle the dataset
+        # Concatenate X_train and y_train
+        dataset = np.hstack((X_train, y_train.reshape(-1, 1)))
+        np.random.shuffle(dataset)  # Shuffle the dataset along the first axis
 
-            loss_item = train_loss/batch_size
-            train_loss_tracker.append(loss_item)
-           
-            if (epochs < 10 or i%(epochs//10) == 0) and verbose:
-                if(plot_boundary):
-                    dg.plot_decision_boundary(X_train,y_train,model_to_plot,title="Boundary evolution")
-                    if i < epochs-1:
-                        clear_output(wait=True)
+        # Split the shuffled dataset back into X_train and y_train
+        X_train_shuffled = dataset[:, :-1]
+        y_train_shuffled = dataset[:, -1]
 
-                print(f"Epoch {i} : Train loss : {loss_item}")
+        train_data = dg.batch_generator(
+            X_train_shuffled, y_train_shuffled, batch_size)
 
-        print(f"Model updated {nb_time_updated} times.")
-        return train_loss_tracker
+        for batch_x, batch_y in train_data:
+            total_loss += network.step(batch_x, batch_y)
 
-    @staticmethod
-    def step(
-        model : Module, loss : Loss, X_train : np.ndarray, y_train : np.ndarray, 
-        X_val : np.ndarray = None, y_val : np.ndarray = None, epochs : int = 1000, lr : float = 1e-3, batch_size : int = 32,
-        verbose : bool = True
-    ):
-        train_loss_tracker = []
-        val_loss_tracker = []
-        val_loss_item = None
-        nb_time_updated = 0
-        for i in range(epochs):
-            # Training
-            train_data = dg.batch_generator(X_train, y_train, batch_size)
-            val_data = dg.batch_generator(X_val, y_val, batch_size) if X_val is not None else None
-            train_loss = 0
-            for batch_x, batch_y in train_data:
-                model.zero_grad()
-                output = model.forward(batch_x)
-                train_loss += loss.forward(batch_y, output)
-                loss_grad = loss.backward(batch_y, output)
-                # on s'en fou de la delta_grad, car pour l'instant on a un seul module
-                model.backward_delta(batch_x, loss_grad)
-                model.backward_update_gradient(batch_x, loss_grad)
-                model.update_parameters(lr)
-                nb_time_updated += 1
+        avg_loss = total_loss / num_batches
 
-            loss_item = train_loss/batch_size
-            train_loss_tracker.append(loss_item)
-            # Validation
-            if val_data is not None:
-                val_loss = 0
-                for val_x, val_y in val_data:
-                    val_output = model.forward(val_x)
-                    val_loss += loss.forward(val_output, val_y)
-                val_loss_item = val_loss/batch_size
-                val_loss_tracker.append(val_loss_item)
-            
-            if (epochs < 10 or i%(epochs//10) == 0) and verbose:
-                print(f"Epoch {i} : Train loss : {loss_item} - Val loss : {val_loss_item}")
+        train_loss_tracker.append(avg_loss)
 
-        print(f"Model updated {nb_time_updated} times.")
-        return train_loss_tracker, val_loss_tracker
+        if (epochs < 10 or epoch % (epochs//10) == 0) and verbose:
+            print(f"Epoch {epoch+1}/{epochs}, Average Loss: {avg_loss}")
 
+    print("Training finished.")
+    return train_loss_tracker
