@@ -4,6 +4,38 @@ from pylamp.neural.module import Module
 from pylamp.utils.data import DataGenerator as dg
 from IPython.display import clear_output
 
+class Optim:
+    def __init__(self, net, loss, eps):
+        """Initialize the Optimizer.
+        @param net: The neural network model.
+        @param loss: The loss function.
+        @param eps: The learning rate (step size) for gradient descent.
+        """
+        self.net = net
+        self.loss = loss
+        self.eps = eps
+
+    def step(self, batch_x, batch_y):
+        """Perform one step of gradient descent.
+        @param batch_x: Input data (batch) for training.
+        @param batch_y: Target labels (batch) for training.
+        """
+        # Reset gradients to zero
+        self.net.zero_grad()  
+
+        # Forward pass
+        output = self.net.forward(batch_x)
+
+        # Compute loss
+        loss_value = self.loss.forward(batch_y, output)
+
+        # Backward pass
+        loss_grad = self.loss.backward(batch_y, output)
+        self.net.backward(loss_grad, self.eps)
+
+        return loss_value
+
+
 class SGD():
     @staticmethod
     def step_multiple(fc1 : Module,fc2 : Module,activation1 : Module,activation2 : Module,loss : Loss, X_train : np.ndarray, y_train : np.ndarray, 
