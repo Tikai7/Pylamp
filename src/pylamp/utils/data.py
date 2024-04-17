@@ -61,9 +61,10 @@ class DataGenerator():
 
     @staticmethod
     def plot_2D_data(X, y):
+        plt.style.use('ggplot')
         plot_data(X,y)
 
-    def plot_decision_boundary(X, y, model, title):
+    def plot_decision_boundary(X, y, model, title, alpha=1.0):
         x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
         y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
         xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.01),
@@ -72,8 +73,9 @@ class DataGenerator():
         Z = model.forward(np.array(np.c_[xx.ravel(), yy.ravel()], dtype=np.float32))
         Z = np.where(Z >= 0.5, 1, 0)
         Z = Z.reshape(xx.shape)
+        plt.style.use('ggplot')
         plt.figure(figsize=(12, 7))
         plt.contourf(xx, yy, Z, alpha=0.8)
-        plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.Paired, edgecolors='k')
+        plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.Paired, edgecolors='k', alpha=alpha)
         plt.title(title)
         plt.show() 
