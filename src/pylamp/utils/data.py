@@ -33,7 +33,7 @@ class DataGenerator():
         return X_train,X_test,y_train,y_test 
     
     @staticmethod
-    def batch_generator(data, labels, batch_size):
+    def batch_generator(data, labels, batch_size, add_channel_x=False, add_channel_y=False):
         num_batches = len(data) // batch_size
         for i in range(num_batches):
             start_idx = i * batch_size
@@ -43,6 +43,11 @@ class DataGenerator():
             batch_x = batch_x.reshape(batch_size, -1)
             batch_y = batch_y.reshape(batch_size, -1)
 
+            if add_channel_x:
+                batch_x = np.expand_dims(batch_x, axis=-1)
+            if add_channel_y:
+                batch_y = np.expand_dims(batch_y, axis=-1)
+                
             yield batch_x, batch_y
 
 
