@@ -100,7 +100,7 @@ class CrossEntropyLoss(Loss):
         @param y_hat: numpy array of shape (batch_size, num_classes) - predicted probabilities
         @return grad: numpy array of shape (batch_size, num_classes) - gradient of the loss with respect to y_hat
         """
-        grad = y_hat - y
+        grad = np.exp(y_hat) / np.exp(y_hat).sum(axis=1).reshape((-1, 1)) - y
         return grad
 
     def _log_softmax(self, x):
