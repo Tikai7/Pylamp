@@ -54,7 +54,7 @@ class ReLU(Module):
         super().__init__()
 
     def forward(self, X):
-        return np.where(X > 0, X, 0)
+        return np.maximum(0, X)
 
     def zero_grad(self):
         pass
@@ -66,7 +66,7 @@ class ReLU(Module):
         pass
 
     def backward_delta(self, input, delta):
-        return np.where(input > 0, 1, 0)*delta
+        return  delta * (input > 0)
 
 
 class Softmax(Module):

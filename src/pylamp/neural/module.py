@@ -2,8 +2,8 @@ class Module(object):
     """Class representing a module in a neural network. 
 
     @attributes:
-    - _parameters: the parameters of the module
-    - _gradient: the gradient of the module
+    - parameters: the parameters of the module
+    - gradient: the gradient of the module
 
     @methods:
     - zero_grad: set the gradient to zero
@@ -13,8 +13,8 @@ class Module(object):
     - backward_delta: compute gradient of the loss with respect to the input.
     """
     def __init__(self):
-        self._parameters = None
-        self._gradient = None
+        self.parameters = None
+        self.gradient = None
 
     def zero_grad(self):
         """Set the gradient to zero."""
@@ -33,7 +33,7 @@ class Module(object):
         @param gradient_step: the step of the gradient descent.
         """
         ## Calcule la mise a jour des parametres selon le gradient calcule et le pas de gradient_step
-        self._parameters -= gradient_step*self._gradient
+        self.parameters -= gradient_step*self.gradient
 
     def backward_update_gradient(self, input, delta):
         """Update the gradient :
