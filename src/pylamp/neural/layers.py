@@ -31,8 +31,8 @@ class Linear(Module):
         return output
 
     def update_parameters(self, gradient_step=1e-3, clip_value=1.0):
-        # np.clip(self.gradient["weights"], -clip_value, clip_value, out=self.gradient["weights"])
-        # np.clip(self.gradient["bias"], -clip_value, clip_value, out=self.gradient["bias"])
+        np.clip(self.gradient["weights"], -clip_value, clip_value, out=self.gradient["weights"])
+        np.clip(self.gradient["bias"], -clip_value, clip_value, out=self.gradient["bias"])
         self.parameters["weights"] -= gradient_step*self.gradient["weights"]
         if self.use_bias : 
             self.parameters["bias"] -= gradient_step*self.gradient["bias"]
@@ -51,13 +51,14 @@ class Conv1D(Module):
         Padding is always set to 'valid'
     """
 
-    def __init__(self,   kernel_size=9, in_channels=3, out_channels=32, strides=1, use_bias = True):
+    def __init__(self,   kernel_size=9, in_channels=3, out_channels=32, strides=1, use_bias = True, padding='valid'):
         super().__init__()
         self.kernel_size = kernel_size
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.strides = strides
         self.use_bias = use_bias
+        self.padding = padding
         limit = np.sqrt(6 / (kernel_size * in_channels + out_channels))
         self.parameters = {
             "weights": np.random.uniform(-limit, limit, (kernel_size, in_channels, out_channels)),
@@ -72,7 +73,16 @@ class Conv1D(Module):
         self.gradient["weights"].fill(0)
         self.gradient["bias"].fill(0)
 
+    def pad_input(self, X):
+        if self.padding == 'same':
+            pad_total = max((self.strides - 1) * X.shape[1] + self.kernel_size - self.strides, 0)
+            pad_start = pad_total // 2
+            pad_end = pad_total - pad_start
+            X = np.pad(X, ((0, 0), (pad_start, pad_end), (0, 0)), mode='constant')
+        return X
+
     def forward(self, X):
+        X = self.pad_input(X)
         batch, size, in_channel = X.shape
         output_size = (size - self.kernel_size) // self.strides + 1
         # Redéfinition de l'entrée pour appliquer la convolution
@@ -97,10 +107,9 @@ class Conv1D(Module):
             self.parameters["bias"] -= gradient_step*self.gradient["bias"]
 
     def backward_update_gradient(self, input, delta):
-        X = input
+        X = self.pad_input(input)
         batch, size, in_channel = X.shape
         output_size = (size - self.kernel_size) // self.strides + 1
-
         windows_view = np.lib.stride_tricks.as_strided(
             X,
             shape=(batch, output_size, self.kernel_size, in_channel),
@@ -116,13 +125,15 @@ class Conv1D(Module):
 
 
     def backward_delta(self, input, delta):
-        _, size, _ = input.shape
-        out_length = (size - self.kernel_size) // self.strides + 1
-        d_out = np.zeros_like(input)
+        X = self.pad_input(input)
+        _, size, _ = X.shape
+        output_size = (size - self.kernel_size) // self.strides + 1
+        d_out = np.zeros_like(X)
         d_in = np.einsum("bod, kcd -> kboc", delta, self.parameters["weights"])
         for i in range(self.kernel_size):
-            d_out[:, i : i + out_length * self.strides : self.strides, :] += d_in[i]
-        return d_out
+            d_out[:, i : i + output_size * self.strides : self.strides, :] += d_in[i]
+
+        return d_out[:, :input.shape[1], :]
 
     
 class MaxPool1D(Module):
@@ -178,6 +189,37 @@ class MaxPool1D(Module):
 
     def update_parameters(self, learning_rate):
         pass
+
+
+class Upsampling1D(Module):
+    """Class representing a basic upsampling layer in a neural network using nearest-neighbor upsampling."""
+
+    def __init__(self, size=2):
+        super().__init__()
+        self.size = size
+
+    def forward(self, X):
+        # Initialize upsampled output
+        upsampled = np.repeat(X, self.size, axis=1)
+        return upsampled
+    
+    def zero_grad(self):
+        pass
+
+    def update_parameters(self, learning_rate):
+        pass
+
+    def backward_delta(self, input, delta):
+        _, input_size, _ = input.shape
+        # Initialize gradient array with zeros
+        delta_grad = np.zeros_like(input)
+        for i in range(input_size):
+            delta_grad[:, i, :] = np.sum(delta[:, i * self.size:(i + 1) * self.size, :], axis=1)
+        return delta_grad
+
+    def backward_update_gradient(self, input, delta):
+        pass
+
 
 class Flatten(Module):
     """Class representing a flattening layer in a neural network.

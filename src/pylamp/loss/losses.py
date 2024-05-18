@@ -49,6 +49,60 @@ class BCELoss(Loss):
         yhat_2 = np.clip(1-yhat, 1e-10, 1)
         return -((y/yhat_1) - (1-y)/(yhat_2))/y.shape[0]
 
+class DiceLoss(Loss):
+    """Dice Loss implementation inheriting from Loss class."""
+
+    def forward(self, y, yhat):
+        """Compute the forward pass (Dice coefficient loss).
+        @param y: the target
+        @param yhat: the prediction
+        """
+        # Flatten the input arrays
+        y = y.flatten()
+        yhat = yhat.flatten()
+        
+        # Calculate intersection and union
+        intersection = np.sum(y * yhat)
+        union = np.sum(y) + np.sum(yhat)
+        
+        # Compute Dice coefficient
+        dice_coefficient = (2. * intersection) / (union + 1e-7)  # Add epsilon to avoid division by zero
+        dice_loss = 1 - dice_coefficient
+        
+        return dice_loss
+
+    def backward(self, y, yhat):
+        """Compute the backward pass (gradient of Dice loss).
+        @param y: the target
+        @param yhat: the prediction
+        """
+        # Flatten the input arrays
+        y = y.flatten()
+        yhat = yhat.flatten()
+        
+        # Calculate intersection and union
+        intersection = np.sum(y * yhat)
+        union = np.sum(y) + np.sum(yhat)
+        
+        # Compute gradient of Dice coefficient
+        grad = (2 * (y * union - intersection) / (union ** 2 + 1e-7))
+        
+        return grad
+
+class CombinedDiceBCELoss(Loss):
+    
+    def forward(self, y, yhat):
+        dice_loss = DiceLoss().forward(y, yhat)
+        bce_loss = BCELoss().forward(y, yhat)
+        return dice_loss + bce_loss
+    
+    def backward(self, y, yhat):
+        dice_grad = DiceLoss().backward(y, yhat)
+        bce_grad = BCELoss().backward(y, yhat)
+        dice_grad = dice_grad.reshape(y.shape)
+        return bce_grad + dice_grad
+    
+
 # class CrossEntropyLoss(Loss):
 #     """Class representing the Cross Entropy loss."""
 
