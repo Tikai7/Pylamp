@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class Loss(object):
     """Class representing a loss function.
     @methods:
@@ -21,8 +22,10 @@ class Loss(object):
         """
         pass
 
+
 class MSELoss(Loss):
     """Class representing the Mean Squared Error loss."""
+
     def forward(self, y, yhat):
         assert y.shape == yhat.shape, "y and yhat must have the same shape, got {} and {}".format(
             y.shape, yhat.shape)
@@ -33,8 +36,10 @@ class MSELoss(Loss):
             y.shape, yhat.shape)
         return -2*(y-yhat)/y.shape[0]
 
+
 class BCELoss(Loss):
     """Class representing the Binary Cross Entropy loss."""
+
     def forward(self, y, yhat):
         assert y.shape == yhat.shape, "y and yhat must have the same shape, got {} and {}".format(
             y.shape, yhat.shape)
@@ -49,6 +54,7 @@ class BCELoss(Loss):
         yhat_2 = np.clip(1-yhat, 1e-10, 1)
         return -((y/yhat_1) - (1-y)/(yhat_2))/y.shape[0]
 
+
 class DiceLoss(Loss):
     """Dice Loss implementation inheriting from Loss class."""
 
@@ -60,15 +66,16 @@ class DiceLoss(Loss):
         # Flatten the input arrays
         y = y.flatten()
         yhat = yhat.flatten()
-        
+
         # Calculate intersection and union
         intersection = np.sum(y * yhat)
         union = np.sum(y) + np.sum(yhat)
-        
+
         # Compute Dice coefficient
-        dice_coefficient = (2. * intersection) / (union + 1e-7)  # Add epsilon to avoid division by zero
+        # Add epsilon to avoid division by zero
+        dice_coefficient = (2. * intersection) / (union + 1e-7)
         dice_loss = 1 - dice_coefficient
-        
+
         return dice_loss
 
     def backward(self, y, yhat):
@@ -79,29 +86,30 @@ class DiceLoss(Loss):
         # Flatten the input arrays
         y = y.flatten()
         yhat = yhat.flatten()
-        
+
         # Calculate intersection and union
         intersection = np.sum(y * yhat)
         union = np.sum(y) + np.sum(yhat)
-        
+
         # Compute gradient of Dice coefficient
         grad = (2 * (y * union - intersection) / (union ** 2 + 1e-7))
-        
+
         return grad
 
+
 class CombinedDiceBCELoss(Loss):
-    
+
     def forward(self, y, yhat):
         dice_loss = DiceLoss().forward(y, yhat)
         bce_loss = BCELoss().forward(y, yhat)
         return dice_loss + bce_loss
-    
+
     def backward(self, y, yhat):
         dice_grad = DiceLoss().backward(y, yhat)
         bce_grad = BCELoss().backward(y, yhat)
         dice_grad = dice_grad.reshape(y.shape)
         return bce_grad + dice_grad
-    
+
 
 # class CrossEntropyLoss(Loss):
 #     """Class representing the Cross Entropy loss."""
@@ -165,5 +173,38 @@ class CrossEntropyLoss(Loss):
         max_val = np.max(x, axis=1, keepdims=True)
         exp_x = np.exp(x - max_val)
         sum_exp_x = np.sum(exp_x, axis=1, keepdims=True)
-        log_probs = np.log(exp_x / sum_exp_x + 1e-10)  # Adding epsilon to avoid log(0)
+        # Adding epsilon to avoid log(0)
+        log_probs = np.log(exp_x / sum_exp_x + 1e-10)
         return log_probs
+
+
+class RMSELoss(Loss):
+    """Class representing the Root Mean Squared Error loss function."""
+
+    def forward(self, y, yhat):
+        """Compute the RMSE between the target and the prediction.
+        @param y: the target
+        @param yhat: the prediction
+        """
+        # Ensure y and yhat are numpy arrays
+        y = np.array(y)
+        yhat = np.array(yhat)
+
+        # Compute the RMSE
+        mse = np.mean((y - yhat) ** 2)
+        rmse = np.sqrt(mse)
+        return rmse
+
+    def backward(self, y, yhat):
+        """Compute the gradient of the RMSE loss with respect to the predictions.
+        @param y: the target
+        @param yhat: the prediction
+        """
+        # Ensure y and yhat are numpy arrays
+        y = np.array(y)
+        yhat = np.array(yhat)
+
+        # Compute the gradient
+        m = y.shape[0]  # Number of samples
+        grad = (yhat - y) / (m * np.sqrt(np.mean((y - yhat) ** 2)))
+        return grad
