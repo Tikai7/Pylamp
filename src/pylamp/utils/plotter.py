@@ -49,7 +49,7 @@ class Display():
             indices = np.where(y_test_np == i)
             plt.scatter(latent_2d[indices, 0], latent_2d[indices, 1], label=f'Class {i}', alpha=0.6)
         plt.legend()
-        plt.title("2D t-SNE projection of the latent space")
+        plt.title("Projection 2D de l'espace latent 2D avec t-SNE")
         plt.xlabel("t-SNE component 1")
         plt.ylabel("t-SNE component 2")
         plt.show()
@@ -58,12 +58,12 @@ class Display():
 
     
     @staticmethod
-    def plot_reconstruction(model, X, y, n=1, expand_dims=False):
+    def plot_reconstruction(model, X, y, n=1, expand_dims=False, calculation=False):
         plt.style.use('ggplot')
-        plt.figure(figsize=(10,5))
+        plt.figure(figsize=(10,5)) 
         for label in np.random.choice(np.unique(y),n):
             target = X[y == label][0]
             target = np.expand_dims(target, axis=-1) if expand_dims else target
             pred = model.forward(np.array([target]))
             Display.compare_images(target,pred,shape=(16,16),fig_size=(7,3))
-        plt.show() 
+        plt.show() if not calculation else None
