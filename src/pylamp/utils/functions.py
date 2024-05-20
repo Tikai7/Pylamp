@@ -3,6 +3,16 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
 import matplotlib.pyplot as plt
 
+
+def calculate_reconstruction_error(model, X, expand_dims=False):
+    err = []
+    for x in X:
+        target = np.expand_dims(x, axis=-1) if expand_dims else x
+        pred = model.forward(np.array([target]))
+        err.append(np.mean((target - pred)**2))
+    print(f"Average error: {np.array(err).mean()}")
+    return err
+
 def print_accuracy(model,X_test,y_test, print_result=True):
     y_pred = np.argmax(model.forward(X_test),axis=1)
     accuracy = np.sum(y_test == y_pred)/len(y_test)

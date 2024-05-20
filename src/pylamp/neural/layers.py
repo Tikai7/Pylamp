@@ -199,7 +199,6 @@ class Upsampling1D(Module):
         self.size = size
 
     def forward(self, X):
-        # Initialize upsampled output
         upsampled = np.repeat(X, self.size, axis=1)
         return upsampled
     
@@ -211,7 +210,6 @@ class Upsampling1D(Module):
 
     def backward_delta(self, input, delta):
         _, input_size, _ = input.shape
-        # Initialize gradient array with zeros
         delta_grad = np.zeros_like(input)
         for i in range(input_size):
             delta_grad[:, i, :] = np.sum(delta[:, i * self.size:(i + 1) * self.size, :], axis=1)
