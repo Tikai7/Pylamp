@@ -1,6 +1,9 @@
+import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.manifold import TSNE
+from sklearn.metrics import confusion_matrix
+
 
 class Display():
     @staticmethod
@@ -47,7 +50,8 @@ class Display():
         plt.figure(figsize=(10, 8))
         for i in range(10):
             indices = np.where(y_test_np == i)
-            plt.scatter(latent_2d[indices, 0], latent_2d[indices, 1], label=f'Class {i}', alpha=0.6)
+            plt.scatter(
+                latent_2d[indices, 0], latent_2d[indices, 1], label=f'Class {i}', alpha=0.6)
         plt.legend()
         plt.title("2D t-SNE projection of the latent space")
         plt.xlabel("t-SNE component 1")
@@ -56,14 +60,28 @@ class Display():
 
         return latent_2d
 
-    
     @staticmethod
     def plot_reconstruction(model, X, y, n=1, expand_dims=False):
         plt.style.use('ggplot')
-        plt.figure(figsize=(10,5))
-        for label in np.random.choice(np.unique(y),n):
+        plt.figure(figsize=(10, 5))
+        for label in np.random.choice(np.unique(y), n):
             target = X[y == label][0]
             target = np.expand_dims(target, axis=-1) if expand_dims else target
             pred = model.forward(np.array([target]))
-            Display.compare_images(target,pred,shape=(16,16),fig_size=(7,3))
-        plt.show() 
+            Display.compare_images(
+                target, pred, shape=(16, 16), fig_size=(7, 3))
+        plt.show()
+
+    @staticmethod
+    def confusion_matrix(y_true, y_pred, labels=None):
+        cm = confusion_matrix(y_true, y_pred)
+        plt.figure(figsize=(8, 6))
+        if labels is not None:
+            sns.heatmap(cm, annot=False, fmt='d', cmap='viridis',
+                        xticklabels=labels, yticklabels=labels)
+        else:
+            sns.heatmap(cm, annot=False, fmt='d', cmap='viridis')
+        plt.title('Confusion Matrix')
+        plt.xlabel('Predicted Label')
+        plt.ylabel('True Label')
+        plt.show()
