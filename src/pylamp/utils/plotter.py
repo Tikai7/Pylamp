@@ -73,6 +73,18 @@ class Display():
         plt.show() if not calculation else None
 
     @staticmethod
+    def plot_arabic(x,y):
+        # # Reshape the vector into a 16x16 matrix
+        image = x.reshape((16, 16))
+
+        # Plot the image
+        plt.imshow(image, cmap='gray')
+        plt.colorbar()  # Optional: adds a colorbar to the side
+        plt.title("Label: "+ y)
+        plt.axis('off')  # Optional: turns off the axis
+        plt.show()
+
+    @staticmethod
     def confusion_matrix(y_true, y_pred, labels=None):
         cm = confusion_matrix(y_true, y_pred)
         plt.figure(figsize=(8, 6))
