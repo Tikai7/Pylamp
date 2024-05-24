@@ -101,7 +101,6 @@ class RMSELoss(Loss):
         y = np.array(y)
         yhat = np.array(yhat)
 
-        # Compute the RMSE
         mse = np.mean((y - yhat) ** 2)
         rmse = np.sqrt(mse)
         return rmse
