@@ -55,94 +55,6 @@ class BCELoss(Loss):
         return -((y/yhat_1) - (1-y)/(yhat_2))/y.shape[0]
 
 
-class DiceLoss(Loss):
-    """Dice Loss implementation inheriting from Loss class."""
-
-    def forward(self, y, yhat):
-        """Compute the forward pass (Dice coefficient loss).
-        @param y: the target
-        @param yhat: the prediction
-        """
-        # Flatten the input arrays
-        y = y.flatten()
-        yhat = yhat.flatten()
-
-        # Calculate intersection and union
-        intersection = np.sum(y * yhat)
-        union = np.sum(y) + np.sum(yhat)
-
-        # Compute Dice coefficient
-        # Add epsilon to avoid division by zero
-        dice_coefficient = (2. * intersection) / (union + 1e-7)
-        dice_loss = 1 - dice_coefficient
-
-        return dice_loss
-
-    def backward(self, y, yhat):
-        """Compute the backward pass (gradient of Dice loss).
-        @param y: the target
-        @param yhat: the prediction
-        """
-        # Flatten the input arrays
-        y = y.flatten()
-        yhat = yhat.flatten()
-
-        # Calculate intersection and union
-        intersection = np.sum(y * yhat)
-        union = np.sum(y) + np.sum(yhat)
-
-        # Compute gradient of Dice coefficient
-        grad = (2 * (y * union - intersection) / (union ** 2 + 1e-7))
-
-        return grad
-
-
-class CombinedDiceBCELoss(Loss):
-
-    def forward(self, y, yhat):
-        dice_loss = DiceLoss().forward(y, yhat)
-        bce_loss = BCELoss().forward(y, yhat)
-        return dice_loss + bce_loss
-
-    def backward(self, y, yhat):
-        dice_grad = DiceLoss().backward(y, yhat)
-        bce_grad = BCELoss().backward(y, yhat)
-        dice_grad = dice_grad.reshape(y.shape)
-        return bce_grad + dice_grad
-
-
-# class CrossEntropyLoss(Loss):
-#     """Class representing the Cross Entropy loss."""
-
-#     def forward(self, y, y_hat):
-#         """Compute the cross-entropy loss given ground truth labels y and predicted probabilities y_hat.
-#         @param y: numpy array of shape (batch_size, num_classes) - ground truth labels (one-hot encoded)
-#         @param y_hat: numpy array of shape (batch_size, num_classes) - predicted probabilities
-#         @return loss: float - mean cross-entropy loss for the batch
-#         """
-#         log_probs = self._log_softmax(y_hat)
-#         loss = -np.sum(y * log_probs) / y.shape[0]  # Compute mean loss
-#         return loss
-
-#     def backward(self, y, y_hat):
-#         """Compute the gradient of the cross-entropy loss with respect to y_hat.
-#         @param y: numpy array of shape (batch_size, num_classes) - ground truth labels (one-hot encoded)
-#         @param y_hat: numpy array of shape (batch_size, num_classes) - predicted probabilities
-#         @return grad: numpy array of shape (batch_size, num_classes) - gradient of the loss with respect to y_hat
-#         """
-#         grad = y_hat - y
-#         return grad
-
-#     def _log_softmax(self, x):
-#         """Compute the log softmax of input x.
-#         @param x: numpy array of shape (batch_size, num_classes) - input logits
-#         @return log_probs: numpy array of shape (batch_size, num_classes) - log softmax probabilities
-#         """
-#         max_val = np.max(x, axis=1, keepdims=True)
-#         exp_x = np.exp(x - max_val)
-#         log_probs = np.log(exp_x / np.sum(exp_x, axis=1, keepdims=True))
-#         return log_probs
-
 class CrossEntropyLoss(Loss):
     """Class representing the Cross Entropy loss."""
 
@@ -186,7 +98,6 @@ class RMSELoss(Loss):
         @param y: the target
         @param yhat: the prediction
         """
-        # Ensure y and yhat are numpy arrays
         y = np.array(y)
         yhat = np.array(yhat)
 
@@ -200,11 +111,9 @@ class RMSELoss(Loss):
         @param y: the target
         @param yhat: the prediction
         """
-        # Ensure y and yhat are numpy arrays
         y = np.array(y)
         yhat = np.array(yhat)
 
-        # Compute the gradient
-        m = y.shape[0]  # Number of samples
+        m = y.shape[0]  
         grad = (yhat - y) / (m * np.sqrt(np.mean((y - yhat) ** 2)))
         return grad

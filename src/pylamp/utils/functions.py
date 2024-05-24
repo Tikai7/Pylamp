@@ -2,14 +2,19 @@ import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
 import matplotlib.pyplot as plt
-
+from skimage.metrics import structural_similarity as ssim
 
 def calculate_reconstruction_error(model, X, expand_dims=False):
+    err_ssim = []
     err = []
     for x in X:
         target = np.expand_dims(x, axis=-1) if expand_dims else x
         pred = model.forward(np.array([target]))
+        pred = pred[0]
         err.append(np.mean((target - pred)**2))
+        err_ssim.append(ssim(target.reshape(16,16), pred.reshape(16,16), data_range=target.max() - target.min()))
+
+    print(f"Average SSIM: {np.array(err_ssim).mean()}")
     print(f"Average error: {np.array(err).mean()}")
     return err
 

@@ -170,10 +170,6 @@ class MaxPool1D(Module):
         pass
 
     def backward_delta(self, input, delta):
-        # Initialize gradient array with zeros
-        # delta_grad = np.zeros(input.shape)
-        # batch, output_size, in_channel = input.shape
-        
         delta_grad = np.zeros_like(input)
         batch, size, in_channel = input.shape
         output_size = (size - self.kernel_size) // self.strides + 1  
